@@ -11,6 +11,10 @@ import UIKit
 class scrollCVC: UICollectionViewCell {
     
     @IBOutlet weak var title: UILabel!
+    
+    override func draw(_ rect: CGRect) {
+        self.layer.cornerRadius = self.layer.frame.width / 2.0
+    }
 
     
 }

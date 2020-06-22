@@ -95,8 +95,8 @@ extension EntryVC {
         }
     }
     
-    func zoomClose(to coord: CLLocationCoordinate2D) {
-        let region = MKCoordinateRegion.init(center: coord, latitudinalMeters: 10000, longitudinalMeters: 10000)
+    func zoomClose(to coord: CLLocationCoordinate2D, withMeter meter: Double) {
+        let region = MKCoordinateRegion.init(center: coord, latitudinalMeters: meter, longitudinalMeters: meter)
         map.setRegion(region, animated: true)
     }
     
@@ -180,7 +180,7 @@ extension EntryVC : CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let currentLocation = locations.last else { return }
         location = currentLocation.coordinate
-        zoomClose(to: location!)
+        zoomClose(to: location!, withMeter: 8000)
     }
     
 }
@@ -206,7 +206,7 @@ extension EntryVC : HandleMapSearch {
         selectedPin = placemark
         map.removeAnnotations(map.annotations)
         dropPin(withPlacemark: placemark)
-        zoomClose(to: placemark.coordinate)
+        zoomClose(to: placemark.coordinate, withMeter: 8000)
     }
     
 }
@@ -225,16 +225,19 @@ extension EntryVC : UICollectionViewDelegate, UICollectionViewDataSource, UIColl
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Constants.Cells.cell, for: indexPath) as! scrollCVC
+        
         cell.title.text = "\(matchingItems[indexPath.row].name ?? "")"
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         performSegue(withIdentifier: Constants.Segues.toPinDetails, sender: self)
+//        let selectedAnnotation = matchingItems[indexPath.row]
+//        map.selectAnnotation(selectedAnnotation as! MKAnnotation, animated: true)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize.init(width: view.frame.width / 3, height: 100)
+        return CGSize.init(width: 125, height: 125)
     }
     
 }
@@ -247,14 +250,20 @@ extension EntryVC : MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         let annotationView = CycleAnnotationView(annotation: annotation, reuseIdentifier: CycleAnnotationView.ReuseID)
-//        annotationView.canShowCallout = true
-//        annotationView.rightCalloutAccessoryView = UIButton.init(type: .detailDisclosure)
         return annotationView
     }
     
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        guard let coord = view.annotation?.coordinate else { return }
+        let span = map.region.span.longitudeDelta
+//        print(span)
+        if span >= 0.05771811320292386 {
+            zoomClose(to: coord, withMeter: 1000)
+        } else {
+            zoomClose(to: coord, withMeter: 200)
+        }
+    }
     
-//    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-//    }
 }
 
 
